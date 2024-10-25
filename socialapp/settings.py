@@ -4,7 +4,6 @@ from pathlib import Path
 # import cloudinary.uploader #type: ignore
 # import cloudinary.api #type: ignore
 
-
 # cloudinary.config(
 #   cloud_name = "",
 #   api_key = "",
@@ -108,18 +107,18 @@ WSGI_APPLICATION = 'socialapp.wsgi.application'
 #     }
 # }
 
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',  # Change to PostgreSQL backend
-        'NAME': 'socialconnect_circlefind',  # PostgreSQL database name
-        'USER': 'socialconnect_circlefind',      # Database username
-        'PASSWORD': '46941e1cdcef3d49ad66ca68336b8f5f83f75b53',       # Database password
-        'HOST': '50dzg.h.filess.io',  # Database host
-        'PORT': '5433',         # Database port        
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'koyebdb',
+        'USER': 'koyeb-adm',
+        'PASSWORD': 'uHKBN3L4kUoC',
+        'HOST': 'ep-blue-violet-a2tepez0.eu-central-1.pg.koyeb.app',
+        'PORT': '5432',
     }
 }
 
+# 49h96uu5gwn19frF
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

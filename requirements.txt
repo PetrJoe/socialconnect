@@ -12,3 +12,4 @@ django-cockroachdb
 whitenoise
 crispy-tailwind
 django-crispy-forms
+djongo
