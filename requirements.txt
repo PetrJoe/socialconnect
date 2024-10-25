@@ -1,6 +1,7 @@
 dj-database-url
 Django
 cloudinary
+psycopg2-binary
 django-cloudinary-storage
 django-cors-headers
 gunicorn
