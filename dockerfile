@@ -23,8 +23,15 @@ COPY . .
 # Collect static files
 RUN python manage.py collectstatic --noinput
 
+# Create Procfile for Koyeb deployment
+RUN echo "web: gunicorn socialapp.wsgi:application --bind 0.0.0.0:\$PORT" > Procfile
+
 # Expose port 8000
 EXPOSE 8000
 
 # Run gunicorn
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "socialapp.wsgi:application"]
+
+
+
+
