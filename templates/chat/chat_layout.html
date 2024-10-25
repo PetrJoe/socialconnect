@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="flex h-screen bg-gray-100">
+    <!-- Left sidebar - Users List -->
+    <div class="w-1/4 bg-white border-r border-gray-200">
+        <div class="p-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold">Chats</h2>
+        </div>
+        <div class="overflow-y-auto h-[calc(100vh-5rem)]">
+            {% for user in users %}
+            <div class="user-item p-4 hover:bg-gray-50 cursor-pointer {% if user == selected_user %}bg-blue-50{% endif %}"
+                 onclick="loadChat('{{ user.id }}')">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
+                        <span class="text-white font-semibold">{{ user.username|first|upper }}</span>
+                    </div>
+                    <div>
+                        <h3 class="font-medium">{{ user.username }}</h3>
+                        <p class="text-sm text-gray-500">
+                            <!-- {% if user.is_online %}
+                                <span class="text-green-500">●</span> Online
+                            {% else %}
+                                <span class="text-gray-400">●</span> Offline
+                            {% endif %} -->
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Right side - Chat Area -->
+    <div class="flex-1 flex flex-col">
+        <!-- Chat Header -->
+        <div class="p-4 border-b border-gray-200 bg-white">
+            {% if selected_user %}
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
+                    <span class="text-white font-semibold">{{ selected_user.username|first|upper }}</span>
+                </div>
+                <h2 class="text-xl font-semibold">{{ selected_user.username }}</h2>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Messages Area -->
+        <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4">
+            {% for message in messages %}
+            <div class="message {% if message.sender == request.user %}ml-auto bg-blue-500 text-white{% else %}bg-gray-200{% endif %} rounded-lg p-3 max-w-[70%]">
+                {% if 'Sent an attachment:' in message.content %}
+                    {% with filename=message.content|slice:"19:" %}
+                    <p class="text-sm">
+                        <a href="/media/chat_attachments/{{ filename|urlencode }}" target="_blank">
+                            📎 {{ filename }}
+                        </a>
+                    </p>
+                    {% endwith %}
+                {% else %}
+                    <p class="text-sm">{{ message.content }}</p>
+                {% endif %}
+                <span class="text-xs {% if message.sender == request.user %}text-blue-100{% else %}text-gray-500{% endif %}">
+                    {{ message.timestamp|date:"g:i A" }}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+        <!-- Message Input -->
+        <div class="p-4 border-t border-gray-200 bg-white">
+            {% if selected_user %}
+                <form id="message-form" class="flex space-x-4">
+                    {% csrf_token %}
+                    <input type="text" id="message-input" class="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Type your message...">
+                    <button type="button" onclick="sendMessage()" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Send</button>
+                    <label class="p-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200">
+                        <input type="file" id="file-input" class="hidden" onchange="sendAttachment()">
+                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                        </svg>
+                    </label>
+                </form>
+            {% else %}
+                <div class="text-center text-gray-500">
+                    Select a user to start chatting
+                </div>
+            {% endif %}
+        </div>
+        </div>
+    </div>
+</div>
+<script>
+    function loadChat(userId) {
+        window.location.href = `?user_id=${userId}`;
+    }
+    
+    function sendMessage() {
+        const messageInput = document.getElementById('message-input');
+        const content = messageInput.value.trim();
+        
+        if (!content) return;
+        
+        const formData = new FormData();
+        formData.append('message', content);
+        formData.append('receiver_id', '{{ selected_user.id }}');
+        
+        fetch('/send-message/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                messageInput.value = '';
+                appendMessage(data.message);
+            }
+        });
+    }
+    
+    document.getElementById('message-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+
+    function appendMessage(message) {
+        const chatMessages = document.getElementById('chat-messages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${message.sender === '{{ request.user.username }}' ? 'ml-auto bg-blue-500 text-white' : 'bg-gray-200'} rounded-lg p-3 max-w-[70%]`;
+        
+        if (message.content.startsWith('Sent an attachment:')) {
+            const fileName = message.content.slice(19).trim(); // Added trim() to remove spaces
+            messageDiv.innerHTML = `
+                <p class="text-sm">
+                    <a href="/media/chat_attachments/${encodeURIComponent(fileName)}" target="_blank" class="underline hover:text-blue-200">
+                        📎 ${fileName}
+                    </a>
+                </p>
+                <span class="text-xs ${message.sender === '{{ request.user.username }}' ? 'text-blue-100' : 'text-gray-500'}">
+                    ${message.timestamp}
+                </span>
+            `;
+        } else {
+            messageDiv.innerHTML = `
+                <p class="text-sm">${message.content}</p>
+                <span class="text-xs ${message.sender === '{{ request.user.username }}' ? 'text-blue-100' : 'text-gray-500'}">
+                    ${message.timestamp}
+                </span>
+            `;
+        }
+        
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    function fetchNewMessages() {
+        if (!('{{ selected_user.id }}')) return;
+        
+        fetch(`/get-messages/?user_id={{ selected_user.id }}`)
+            .then(response => response.json())
+            .then(data => {
+                const chatMessages = document.getElementById('chat-messages');
+                chatMessages.innerHTML = '';
+                
+                data.messages.forEach(message => {
+                    appendMessage(message);
+                });
+            });
+    }
+
+    // Start auto-refresh when DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+        // Initial scroll to bottom
+        const chatMessages = document.getElementById('chat-messages');
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        
+        // Set up periodic refresh
+        setInterval(fetchNewMessages, 200);
+    });
+
+    // Add this to prevent form submission
+    document.getElementById('message-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        sendMessage();
+    });
+
+    // Add the attachment handler
+    function sendAttachment() {
+        const fileInput = document.getElementById('file-input');
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        formData.append('receiver_id', '{{ selected_user.id }}');
+
+        fetch('/send-attachment/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                fileInput.value = '';
+                // Handle the attachment display
+                appendMessage({
+                    content: `Sent an attachment: ${data.attachment.filename}`,
+                    sender: '{{ request.user.username }}',
+                    timestamp: data.attachment.timestamp
+                });
+            }
+        });
+    }
+    
+</script>
+
+{% endblock %}

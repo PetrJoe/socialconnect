@@ -1,0 +1,16 @@
+{% for message in messages %}
+    <div class="message p-4 {% if message.sender == request.user %}bg-blue-100{% else %}bg-gray-100{% endif %} rounded-lg mb-4">
+        <div class="font-bold">{{ message.sender.username }}</div>
+        <div class="message-content">{{ message.content }}</div>
+        {% if message.chatattachment_set.exists %}
+            {% for attachment in message.chatattachment_set.all %}
+                <div class="mt-2">
+                    <a href="{{ attachment.file.url }}" class="text-blue-600 hover:underline" target="_blank">
+                        📎 Attachment
+                    </a>
+                </div>
+            {% endfor %}
+        {% endif %}
+        <div class="text-sm text-gray-500">{{ message.timestamp|date:"M d, Y H:i" }}</div>
+    </div>
+{% endfor %}

@@ -1,0 +1,26 @@
+{
+    "builds": [
+      {
+        "src": "socialapp/wsgi.py",
+        "use": "@vercel/python",
+        "config": { "maxLambdaSize": "15mb", "runtime": "python3.12" }
+      },
+      {
+        "src": "build_files.sh",
+        "use": "@vercel/static",
+        "config": {
+          "distDir": "staticfiles"
+        }
+      }
+    ],
+    "routes": [
+      {
+        "src": "/static/(.*)",
+        "dest": "/staticfiles/$1"
+      },
+      {
+        "src": "/(.*)",
+        "dest": "socialapp/wsgi.py"
+      }
+    ]
+  }

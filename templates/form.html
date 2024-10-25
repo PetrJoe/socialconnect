@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Search for Herb Recommendation{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto bg-green-50 rounded-xl shadow-md overflow-hidden md:max-w-2xl mt-20">
+    <div class="p-8">
+        <h2 class="text-2xl font-semibold text-green-700 mb-4">Find a Herbal Remedy</h2>
+        {% if error %}
+            <p class="text-red-500 mb-4">{{ error }}</p>
+        {% endif %}
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label for="query" class="block text-sm font-medium text-gray-700">Enter an illness:</label>
+                <input
+                    type="text"
+                    id="query"
+                    name="query"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500
+                           focus:ring focus:ring-green-200 focus:ring-opacity-50 appearance-none py-2 px-3 text-gray-700 leading-tight
+                           focus:outline-none focus:shadow-outline"
+                    placeholder="e.g., headache, fever"
+                    required
+                >
+            </div>
+            <button
+                type="submit"
+                class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded
+                       focus:outline-none focus:shadow-outline">
+                Get Recommendation
+            </button>
+        </form>
+
+        <!-- Hidden section for user searches -->
+        <div id="userSearchSection" class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl mt-8 hidden">
+            <div class="p-8">
+                <h3 class="text-xl font-semibold text-green-700 mb-4">Your Previous Searches</h3>
+                <ul id="userSearches" class="list-disc pl-5 text-green-600"></ul>
+            </div>
+        </div>
+
+        <!-- Popular illnesses section -->
+        <div class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl mt-8">
+            <div class="p-8">
+                <h3 class="text-xl font-semibold text-green-700 mb-4">Popular Illnesses</h3>
+                <ul id="popularIllnesses" class="list-disc pl-5 text-green-600"></ul>
+            </div>
+        </div>
+
+        <!-- JavaScript -->
+        <script>
+            // Fetch popular illnesses
+            fetch('/api/popular-illnesses/')
+                .then(response => response.json())
+                .then(data => {
+                    const illnessList = document.getElementById('popularIllnesses');
+                    data.popular_illnesses.forEach(illness => {
+                        const li = document.createElement('li');
+                        li.textContent = illness;
+                        illnessList.appendChild(li);
+                    });
+                })
+                .catch(error => console.error('Error fetching popular illnesses:', error));
+
+            // Toggle visibility of user searches section
+            document.getElementById('userSearchLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                const userSearchSection = document.getElementById('userSearchSection');
+                if (userSearchSection.classList.contains('hidden')) {
+                    userSearchSection.classList.remove('hidden');
+
+                    // Fetch user searches via AJAX
+                    fetch('/searches/')
+                        .then(response => response.json())
+                        .then(data => {
+                            const userSearchesList = document.getElementById('userSearches');
+                            userSearchesList.innerHTML = ''; // Clear previous searches
+                            data.user_searches.forEach(search => {
+                                const li = document.createElement('li');
+                                li.textContent = search.illness + ' - ' + search.english_name;
+                                userSearchesList.appendChild(li);
+                            });
+                        })
+                        .catch(error => console.error('Error fetching user searches:', error));
+                } else {
+                    userSearchSection.classList.add('hidden');
+                }
+            });
+        </script>
+    </div>
+</div>
+{% endblock %}

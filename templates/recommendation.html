@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Natural Remedies for {{ herbs.0.illness }}{% endblock %}
+
+{% block content %}
+<!-- Main Content Section -->
+<div class="max-w-4xl mx-auto mt-20 md:mt-32 px-4">
+    <!-- Header Section -->
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-green-800">Natural Remedies for {{ herbs.0.illness }}</h1>
+        <p class="text-gray-600 mt-2">Traditional herbal treatments that may help with your condition</p>
+    </div>
+
+    {% for herb in herbs %}
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+        <!-- Main Herb Information -->
+        <div class="p-6">
+            <div class="flex flex-col md:flex-row gap-6">
+                <!-- Herb Image -->
+                {% if herb.image_url %}
+                <div class="md:w-1/3">
+                    <img src="{{ herb.image_url }}" alt="{{ herb.english_name }}" class="rounded-lg shadow-md w-full h-auto object-cover">
+                </div>
+                {% endif %}
+
+                <!-- Basic Herb Details -->
+                <div class="md:w-2/3">
+                    <h2 class="text-2xl font-bold text-green-700 mb-4">{{ herb.english_name }}</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-green-50 p-3 rounded">
+                            <p class="text-sm text-gray-600">Also known as:</p>
+                            <p class="font-medium">{{ herb.yoruba_name }} (Yoruba)</p>
+                            <p class="font-medium italic">{{ herb.botanical_name }}</p>
+                        </div>
+                        <div class="bg-green-50 p-3 rounded">
+                            <p class="text-sm text-gray-600">Effectiveness Rating:</p>
+                            <div class="flex items-center">
+                                <div class="w-full bg-gray-200 rounded-full h-4">
+                                    <div class="bg-green-600 h-4 rounded-full" style="width: {{ herb.efficiency }}%"></div>
+                                </div>
+                                <span class="ml-2 font-bold">{{ herb.efficiency }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Usage Instructions -->
+            <div class="mt-8">
+                <h3 class="text-xl font-semibold text-green-700 mb-4">How to Use This Remedy</h3>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="space-y-4">
+                        <div>
+                            <span class="inline-block bg-green-100 text-green-800 px-2 py-1 rounded text-sm">Recommended Part</span>
+                            <p class="mt-1">{{ herb.part_used }}</p>
+                        </div>
+                        <div>
+                            <span class="inline-block bg-green-100 text-green-800 px-2 py-1 rounded text-sm">Dosage</span>
+                            <p class="mt-1">{{ herb.dosage }}</p>
+                        </div>
+                        <div>
+                            <span class="inline-block bg-green-100 text-green-800 px-2 py-1 rounded text-sm">Method</span>
+                            <p class="mt-1">{{ herb.method }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preparation and Safety -->
+            <div class="mt-8 grid md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-xl font-semibold text-green-700 mb-4">Preparation Instructions</h3>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        {{ herb.usage_and_preparation }}
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold text-red-700 mb-4">Important Safety Information</h3>
+                    <div class="bg-red-50 p-4 rounded-lg">
+                        {{ herb.precautions }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Information -->
+            <div class="mt-8">
+                <h3 class="text-xl font-semibold text-green-700 mb-4">Additional Information</h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-medium text-green-800 mb-2">Description</h4>
+                        <p>{{ herb.description }}</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-medium text-green-800 mb-2">Helpful Tips</h4>
+                        <p>{{ herb.additional_tips }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scientific Information -->
+            <div class="mt-8">
+                <h3 class="text-xl font-semibold text-green-700 mb-4">Scientific Details</h3>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p><span class="font-medium">Active Compounds:</span> {{ herb.constituent_elements }}</p>
+                    <p class="mt-2"><span class="font-medium">Therapeutic Components:</span> {{ herb.constituents_for_illness }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Navigation Buttons -->
+    <div class="flex justify-center gap-4 my-8">
+        <a href="{% url 'recommend_herb' %}"
+           class="bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg transition duration-200">
+            Search Another Remedy
+        </a>
+    </div>
+</div>
+
+<!-- Popular Conditions Section -->
+<div class="max-w-4xl mx-auto mb-20 px-4">
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <h3 class="text-xl font-semibold text-green-700 mb-4">Common Health Conditions</h3>
+        <div id="popularIllnesses" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+    </div>
+</div>
+
+<!-- JavaScript to Fetch Popular Illnesses -->
+<script>
+    fetch('/api/popular-illnesses/')
+        .then(response => response.json())
+        .then(data => {
+            const illnessList = document.getElementById('popularIllnesses');
+            data.popular_illnesses.forEach(illness => {
+                const div = document.createElement('div');
+                div.className = 'bg-green-50 p-3 rounded-lg text-green-800 hover:bg-green-100 cursor-pointer transition duration-200';
+                div.textContent = illness;
+                illnessList.appendChild(div);
+            });
+        })
+        .catch(error => console.error('Error fetching popular illnesses:', error));
+</script>
+{% endblock %}
