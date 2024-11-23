@@ -166,11 +166,18 @@
             .then(response => response.json())
             .then(data => {
                 const chatMessages = document.getElementById('chat-messages');
-                chatMessages.innerHTML = '';
+                const wasAtBottom = chatMessages.scrollHeight - chatMessages.clientHeight <= chatMessages.scrollTop + 1;
+                const oldHeight = chatMessages.scrollHeight;
                 
+                chatMessages.innerHTML = '';
                 data.messages.forEach(message => {
                     appendMessage(message);
                 });
+                
+                // Only auto-scroll if user was already at bottom
+                if (wasAtBottom) {
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
             });
     }
 
