@@ -13,9 +13,25 @@ from django.views.decorators.http import require_http_methods
 from django.contrib.auth import login
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
+from chat.models import *
+from chat.forms import SharedFileForm
 
 def index(request):
-    return render(request, 'index.html')
+    form = SharedFileForm()
+    
+    if request.method == 'POST':
+        form = SharedFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            shared_file = form.save(commit=False)
+            shared_file.user = request.user
+            shared_file.save()
+            return redirect('index')
+    
+    context = {
+        'form': form,
+        'shared_files': SharedFile.objects.all().order_by('-uploaded_at')
+    }
+    return render(request, 'index.html', context)
 
 class SignUpView(CreateView):
     model = User

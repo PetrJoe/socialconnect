@@ -1,6 +1,8 @@
 from django.db import models
 from accounts.models import User
 from django.utils import timezone
+from django.conf import settings
+from django.urls import reverse
 
 class Group(models.Model):
     name = models.CharField(max_length=255)
@@ -46,3 +48,41 @@ class ChatAttachment(models.Model):
 
     def __str__(self):
         return f'Attachment by {self.uploaded_by.username} at {self.uploaded_at}'
+
+
+
+class SharedFile(models.Model):
+    name = models.CharField(max_length=255)
+    file = models.FileField(upload_to='shared_files/')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='shared_files')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    description = models.TextField(blank=True)
+    file_size = models.PositiveIntegerField(editable=False, null=True)
+    file_type = models.CharField(max_length=100, editable=False, null=True)
+    download_count = models.PositiveIntegerField(default=0)
+    is_public = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['-uploaded_at']
+        verbose_name = 'Shared File'
+        verbose_name_plural = 'Shared Files'
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return reverse('file-detail', kwargs={'pk': self.pk})
+
+    def save(self, *args, **kwargs):
+        if self.file:
+            self.file_size = self.file.size
+            # Get file type from the file name extension
+            self.file_type = self.file.name.split('.')[-1].lower()
+        super().save(*args, **kwargs)
+
+    def increment_downloads(self):
+        self.download_count += 1
+        self.save()
+
+
+

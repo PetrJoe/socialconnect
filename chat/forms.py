@@ -1,5 +1,6 @@
 from django import forms
-from .models import Group, GroupChat, PrivateChat, ChatAttachment
+from .models import *
+
 
 class GroupForm(forms.ModelForm):
     class Meta:
@@ -60,3 +61,13 @@ class GroupMemberForm(forms.Form):
             'placeholder': 'Enter username to add'
         })
     )
+
+class SharedFileForm(forms.ModelForm):
+    class Meta:
+        model = SharedFile
+        fields = ['name', 'file', 'description']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'w-full px-3 py-2 border rounded-lg'}),
+            'description': forms.Textarea(attrs={'class': 'w-full px-3 py-2 border rounded-lg', 'rows': 3}),
+            'file': forms.FileInput(attrs={'class': 'w-full px-3 py-2 border rounded-lg'}),
+        }

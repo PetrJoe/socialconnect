@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 from django.core.serializers import serialize
-
+from .models import SharedFile
 
 @login_required
 def create_group(request):
@@ -272,5 +272,3 @@ def get_messages(request):
     } for msg in messages]
     
     return JsonResponse({'messages': messages_data})
-
-
